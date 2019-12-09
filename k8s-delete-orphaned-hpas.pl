@@ -2,7 +2,7 @@
 
 use JSON;
 
-$dryrun = $ARGV[0] =~ /dryrun/;
+$dryrun = $ARGV[0] =~ /dry/;
 
 $|=1;
 $json = JSON->new;
