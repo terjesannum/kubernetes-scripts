@@ -2,7 +2,8 @@
 
 use JSON;
 
-$dryrun = $ARGV[0] =~ /dry/;
+$dryrun = $#ARGV == -1;
+print "dryrun - run with argument to execute\n" if($dryrun);
 
 $|=1;
 $json = JSON->new;
