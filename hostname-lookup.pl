@@ -8,14 +8,18 @@ $| = 1;
 $host = $ARGV[0];
 $sleep = $ARGV[1] // 1000;
 $stats = $ARGV[2] // 1000;
+$timeout = $ARGV[3] // 2;
 
 $SIG{INT} = $SIG{TERM} = \&signal;
+$SIG{ALRM} = \&alarm;
 
-printf("Starting hostname lookup of %s, pause %dms%s\n",
-       $host, $sleep, $stats ? sprintf(", stats every %d lookup.", $stats) : ".");
+printf("Starting hostname lookup of %s, pause %dms, timeout %ds%s\n",
+       $host, $sleep, $timeout, $stats ? sprintf(", stats every %d lookup.", $stats) : ".");
 
 while(1) {
+    alarm($timeout);
     $ip = gethostbyname($host);
+    alarm(0);
     $ip = $ip ? inet_ntoa($ip) : "n/a";
     $results->{$ip}++;
     &print_stats if($stats && ++$count % $stats == 0);
@@ -29,6 +33,10 @@ sub print_stats {
     printf("%d total\n", $count);
 }
             
+sub alarm {
+    $results->{"timeout"}++;
+}
+
 sub signal {
     print "Lookup results:\n";
     &print_stats;
