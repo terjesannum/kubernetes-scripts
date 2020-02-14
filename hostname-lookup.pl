@@ -23,8 +23,10 @@ while(1) {
         $ip = gethostbyname($host);
         ualarm(0);
     };
-    if($@) {
-        $ip = $@ eq "alarm" ? "timeout" : "fail";
+    if($@ eq "alarm\n") {
+        $ip = "timeout";
+    } elsif($@) {
+        $ip = "($@)";
     } else {
         $ip = $ip ? inet_ntoa($ip) : "n/a";
     }
