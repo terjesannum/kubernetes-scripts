@@ -3,7 +3,7 @@
 use Socket;
 use Time::HiRes qw(usleep ualarm);
 
-die "Usage: $0 <host> [sleep] [stats]\n" unless $#ARGV >= 0;
+die "Usage: $0 <host> [sleep] [stats] [timeout]\n" unless $#ARGV >= 0;
 
 $| = 1;
 $host = $ARGV[0];
