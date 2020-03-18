@@ -19,8 +19,9 @@ $measurements = `influx -host $host -database $database -execute 'show measureme
 foreach $l (split("\n", $measurements)) {
     if($l =~ /^measurements,(.+)$/) {
         $measurement = $1;
-        $m = $measurement =~ s/\"/\\\"/gr;
-        $series = `influx -host $host -database $database -execute 'show series from "$m" where time > now() - $interval' | wc -l`;
+        $m = $measurement =~ s/\"/\\\\\\\"/gr;
+        $series = qx/influx -host $host -database $database -execute "show series from \\\"$m\\\" where time > now() - $interval" | wc -l/;
+        $series -= 2 if($series > 0);
         $count->{$measurement} = $series;
         printf STDERR ("%s: %d\n", $measurement, $series) if($verbose);
     }
