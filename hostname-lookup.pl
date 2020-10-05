@@ -6,8 +6,7 @@ use Time::HiRes qw(usleep ualarm);
 
 $| = 1;
 
-my $host = undef;
-my $nameserver = undef;
+my ($host, $nameserver, $usevc);
 my $sleep = 10;
 my $stats = 1000;
 my $timeout = 200;
@@ -16,19 +15,20 @@ GetOptions("host=s", \$host,
            "nameserver=s", \$nameserver,
            "sleep=i", \$sleep,
            "stats=i", \$stats,
-           "timeout=i", \$timeout
+           "timeout=i", \$timeout,
+           "usevc", \$usevc
     );
 
-die "Usage: $0 --host <host> [--nameserver <nameserver>] [--sleep <sleep>] [--stats <stats>] [--timeout <timeout>]\n" unless $host;
-
+die "Usage: $0 --host <host> [--nameserver <nameserver>] [--sleep <sleep>] [--stats <stats>] [--timeout <timeout>] [--usevc]\n" unless $host;
 
 $SIG{INT} = $SIG{TERM} = \&signal;
 
-printf("Starting hostname lookup of %s%s, pause %dms, timeout %dms%s\n",
-       $host, ($nameserver ? sprintf(" using %s", $nameserver) : ""), $sleep, $timeout, $stats ? sprintf(", stats every %d lookups.", $stats) : ".");
+printf("Starting hostname lookup of %s%s%s, pause %dms, timeout %dms%s\n",
+       $host, ($nameserver ? sprintf(" using %s", $nameserver) : ""), ($usevc ? " (usevc)" : ""), $sleep, $timeout, $stats ? sprintf(", stats every %d lookups.", $stats) : ".");
 
 my $resolver = Net::DNS::Resolver->new;
 $resolver->nameservers($nameserver) if($nameserver);
+$resolver->usevc(1) if($usevc);
 my ($results, $count);
 
 while(1) {
