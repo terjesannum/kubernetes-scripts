@@ -19,7 +19,7 @@ GetOptions("host=s", \$host,
            "usevc", \$usevc
     );
 
-die "Usage: $0 --host <host> [--nameserver <nameserver>] [--sleep <sleep>] [--stats <stats>] [--timeout <timeout>] [--usevc]\n" unless $host;
+die "Usage: $0 --host=<host> [--nameserver=<nameserver>] [--sleep=<sleep>] [--stats=<stats>] [--timeout=<timeout>] [--usevc]\n" unless $host;
 
 $SIG{INT} = $SIG{TERM} = \&signal;
 
