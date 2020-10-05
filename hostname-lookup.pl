@@ -1,36 +1,60 @@
 #!/usr/bin/env perl
 
-use Socket;
+use Getopt::Long;
+use Net::DNS;
 use Time::HiRes qw(usleep ualarm);
 
-die "Usage: $0 <host> [sleep] [stats] [timeout]\n" unless $#ARGV >= 0;
-
 $| = 1;
-$host = $ARGV[0];
-$sleep = $ARGV[1] // 1000;
-$stats = $ARGV[2] // 1000;
-$timeout = $ARGV[3] // 1000;
+
+my $host = undef;
+my $nameserver = undef;
+my $sleep = 10;
+my $stats = 1000;
+my $timeout = 200;
+
+GetOptions("host=s", \$host,
+           "nameserver=s", \$nameserver,
+           "sleep=i", \$sleep,
+           "stats=i", \$stats,
+           "timeout=i", \$timeout
+    );
+
+die "Usage: $0 --host <host> [--nameserver <nameserver>] [--sleep <sleep>] [--stats <stats>] [--timeout <timeout>]\n" unless $host;
+
 
 $SIG{INT} = $SIG{TERM} = \&signal;
 
-printf("Starting hostname lookup of %s, pause %dms, timeout %dms%s\n",
-       $host, $sleep, $timeout, $stats ? sprintf(", stats every %d lookup.", $stats) : ".");
+printf("Starting hostname lookup of %s%s, pause %dms, timeout %dms%s\n",
+       $host, ($nameserver ? sprintf(" using %s", $nameserver) : ""), $sleep, $timeout, $stats ? sprintf(", stats every %d lookups.", $stats) : ".");
+
+my $resolver = Net::DNS::Resolver->new;
+$resolver->nameservers($nameserver) if($nameserver);
+my ($results, $count);
 
 while(1) {
+    my ($reply, $result);
     eval {
-        local $SIG{ALRM} = sub { die "alarm\n" };
+        local $SIG{ALRM} = sub { die "timeout\n" };
         ualarm($timeout * 1000);
-        $ip = gethostbyname($host);
+        $reply = $resolver->search($host);
         ualarm(0);
     };
-    if($@ eq "alarm\n") {
-        $ip = "timeout";
+    if($@ =~ /timeout/) {
+        $result = "timeout";
     } elsif($@) {
-        $ip = "($@)";
+        $result = "($@)";
+    } elsif($reply) {
+        $result = "n/a";
+        foreach my $rr ($reply->answer) {
+            if($rr->can("address")) {
+                $result = $rr->address;
+                last;
+            }
+        }
     } else {
-        $ip = $ip ? inet_ntoa($ip) : "n/a";
+        $result = $resolver->errorstring;
     }
-    $results->{$ip}++;
+    $results->{$result}++;
     &print_stats if($stats && ++$count % $stats == 0);
     usleep($sleep * 1000);
 }
