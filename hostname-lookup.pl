@@ -12,10 +12,10 @@ my $stats = 1000;
 my $timeout = 200;
 
 GetOptions("host=s", \$host,
-           "nameserver=s", \$nameserver,
-           "sleep=i", \$sleep,
-           "stats=i", \$stats,
-           "timeout=i", \$timeout,
+           "nameserver:s", \$nameserver,
+           "sleep:i", \$sleep,
+           "stats:i", \$stats,
+           "timeout:i", \$timeout,
            "usevc", \$usevc
     );
 
